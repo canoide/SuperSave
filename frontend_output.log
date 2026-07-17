@@ -1,0 +1,16 @@
+
+> supermarket-optimizer-frontend@1.0.0 dev
+> vite --port 3000 --host
+
+
+  VITE v5.4.21  ready in 342 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://192.168.0.2:3000/
+4:00:45 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+4:00:52 AM [vite] hmr update /src/pages/Register.jsx, /src/index.css
+4:01:18 AM [vite] hmr update /src/pages/AdminDashboard.jsx, /src/index.css
+4:04:07 AM [vite] hmr update /src/pages/UserDashboard.jsx, /src/index.css
+4:06:14 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+4:09:36 AM [vite] hmr update /src/App.jsx, /src/index.css
+4:10:20 AM [vite] hmr update /src/App.jsx, /src/index.css

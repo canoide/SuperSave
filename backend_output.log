@@ -1,0 +1,14 @@
+No MONGO_URI provided. Starting in-memory MongoDB server...
+In-memory MongoDB server started at: mongodb://127.0.0.1:42967/
+MongoDB connected successfully!
+Seeding initial database...
+Default users created:
+  Admin: admin@super.com / admin123
+  User: user@super.com / user123
+3 stores created successfully.
+6 approved products created successfully.
+Added 1 pending product for moderation testing.
+Product active pricing and historical records seeded successfully.
+Added 1 pending price update request for moderation testing.
+Database Seeding finished successfully!
+Server is running successfully on port 5000
