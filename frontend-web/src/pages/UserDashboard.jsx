@@ -101,9 +101,8 @@ export default function UserDashboard() {
     if (storedLists) {
       const parsed = JSON.parse(storedLists);
       setSavedLists(parsed);
-      if (parsed.length > 0) {
-        setActiveList(parsed[0]);
-      }
+      // Keep activeList as null initially so the user starts in the directory list
+      setActiveList(null);
     }
   }, [navigate]);
 
@@ -166,21 +165,21 @@ export default function UserDashboard() {
 
     const updated = [newList, ...savedLists];
     persistLists(updated);
-    setActiveList(newList);
+    setActiveList(newList); // Automatically enter the list!
     setNewListName('');
     setIsCreateListOpen(false);
     showMessage(`Lista "${newList.name}" creada con éxito.`);
   };
 
   const handleDeleteList = (listId, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!window.confirm('¿Deseas eliminar esta lista?')) return;
 
     const updated = savedLists.filter(l => l.id !== listId);
     persistLists(updated);
 
     if (activeList && activeList.id === listId) {
-      setActiveList(updated.length > 0 ? updated[0] : null);
+      setActiveList(null);
       setOptimizationResult(null);
     }
     showMessage('Lista eliminada.');
@@ -599,365 +598,370 @@ export default function UserDashboard() {
         {/* SCREEN 1: LISTAS (ARMADO Y HISTORIAL) */}
         {activeScreen === 'lists' && (
           <div className="space-y-6">
-
-            {/* Create list / Header card */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-center space-y-4">
-              <ClipboardList size={40} className="mx-auto text-emerald-600" />
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-800">¿Qué compras haremos hoy?</h2>
-                <p className="text-xs text-slate-500 mt-1">Arma una lista de compras rápida o recupera una anterior.</p>
-              </div>
-
-              {!isCreateListOpen ? (
-                <button
-                  onClick={() => setIsCreateListOpen(true)}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm shadow flex items-center justify-center gap-2 transition"
-                >
-                  <Plus size={16} /> Armar una nueva lista
-                </button>
-              ) : (
-                <form onSubmit={handleCreateList} className="space-y-3">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Súper del mes, Asado familiar"
-                    className="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsCreateListOpen(false)}
-                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 rounded-xl text-xs font-bold transition"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold transition shadow"
-                    >
-                      Crear Lista
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-
-            {/* LIST BUILDER PANEL (shown if active list exists) */}
-            {activeList ? (
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
-
-                {/* Active List Header */}
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+            {!activeList ? (
+              /* VIEW A: DIRECTORY OF LISTS (Default / Closed state) */
+              <div className="space-y-6">
+                {/* Create list / Header card */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-center space-y-4">
+                  <ClipboardList size={40} className="mx-auto text-emerald-600" />
                   <div>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Lista Activa</span>
-                    <h3 className="font-black text-slate-900 text-lg">{activeList.name}</h3>
+                    <h2 className="text-xl font-extrabold text-slate-800">Mis Listas de Compras</h2>
+                    <p className="text-xs text-slate-500 mt-1">Crea una lista o selecciona una de tus listas anteriores para ver y optimizar.</p>
                   </div>
-                  <button
-                    onClick={(e) => handleDeleteList(activeList.id, e)}
-                    className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"
-                    title="Borrar Lista"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+
+                  {!isCreateListOpen ? (
+                    <button
+                      onClick={() => setIsCreateListOpen(true)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm shadow flex items-center justify-center gap-2 transition"
+                    >
+                      <Plus size={16} /> Crear nueva lista
+                    </button>
+                  ) : (
+                    <form onSubmit={handleCreateList} className="space-y-3">
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej. Súper del mes, Asado"
+                        className="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
+                        value={newListName}
+                        onChange={(e) => setNewListName(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsCreateListOpen(false)}
+                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 rounded-xl text-xs font-bold transition"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold transition shadow"
+                        >
+                          Crear y Entrar
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
 
-                {/* Autocomplete Product Search */}
-                <div className="space-y-1.5 relative">
-                  <label className="block text-xs font-bold text-slate-700">Agregar productos a tu lista:</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Buscar producto por nombre o código..."
-                      className="w-full border border-slate-300 pl-9 pr-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
-                      value={productSearchQuery}
-                      onChange={(e) => {
-                        setProductSearchQuery(e.target.value);
-                        setIsAutocompleteOpen(true);
+                {/* Directory of Lists */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-3">
+                  <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-1.5">
+                    📁 Tus Listas Guardadas
+                  </h3>
+
+                  {savedLists.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-8">
+                      No tienes listas creadas aún. ¡Crea tu primera lista arriba!
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {savedLists.map((list) => (
+                        <div
+                          key={list.id}
+                          onClick={() => handleSelectList(list)}
+                          className="p-4 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition flex items-center justify-between cursor-pointer"
+                        >
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-slate-900 truncate">{list.name}</h4>
+                            <span className="text-[10px] text-slate-500 block mt-0.5">
+                              {list.items.length} productos • {new Date(list.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteList(list.id);
+                              }}
+                              className="text-slate-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                            <ChevronRight size={18} className="text-emerald-600" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* VIEW B: INSIDE ACTIVE LIST (Detailed / Editing view) */
+              <div className="space-y-6">
+
+                {/* Back button & Active List Header card */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <button
+                      onClick={() => {
+                        setActiveList(null);
+                        setOptimizationResult(null);
                       }}
-                      onFocus={() => setIsAutocompleteOpen(true)}
-                    />
-                    <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-                    {productSearchQuery && (
-                      <button
-                        onClick={() => {
-                          setProductSearchQuery('');
-                          setIsAutocompleteOpen(false);
+                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-emerald-600 transition animate-pulse"
+                    >
+                      ← Volver a mis listas
+                    </button>
+                    <button
+                      onClick={() => handleDeleteList(activeList.id)}
+                      className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition text-xs font-bold flex items-center gap-1"
+                    >
+                      <Trash2 size={14} /> Eliminar lista
+                    </button>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Estás editando</span>
+                    <h3 className="font-black text-slate-900 text-xl">{activeList.name}</h3>
+                  </div>
+
+                  {/* Autocomplete Product Search */}
+                  <div className="space-y-1.5 relative">
+                    <label className="block text-xs font-bold text-slate-700">Agregar productos a esta lista:</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar producto por nombre o código..."
+                        className="w-full border border-slate-300 pl-9 pr-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
+                        value={productSearchQuery}
+                        onChange={(e) => {
+                          setProductSearchQuery(e.target.value);
+                          setIsAutocompleteOpen(true);
                         }}
-                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                      >
-                        <X size={16} />
-                      </button>
+                        onFocus={() => setIsAutocompleteOpen(true)}
+                      />
+                      <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
+                      {productSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setProductSearchQuery('');
+                            setIsAutocompleteOpen(false);
+                          }}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Dynamic Autocomplete Dropdown */}
+                    {isAutocompleteOpen && productSearchQuery.trim().length > 0 && (
+                      <div className="absolute left-0 right-0 bg-white border border-slate-200 mt-1 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto divide-y divide-slate-100">
+                        {filteredProducts.map(p => (
+                          <div
+                            key={p._id}
+                            onClick={() => handleAddProductToList(p)}
+                            className="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer text-xs"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {p.image_url && (
+                                <img src={p.image_url} alt={p.title} className="w-8 h-8 rounded object-cover flex-shrink-0 bg-slate-100" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-900 truncate">{p.title}</p>
+                                <span className="text-[9px] font-mono text-slate-500">Cód: {p.barcode_qr}</span>
+                              </div>
+                            </div>
+                            <button className="p-1 bg-emerald-50 text-emerald-600 rounded">
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        ))}
+
+                        {filteredProducts.length === 0 && (
+                          <div className="p-4 text-center space-y-3">
+                            <p className="text-xs text-slate-500 font-semibold">No se encontraron productos registrados.</p>
+                            <button
+                              type="button"
+                              onClick={handleOpenRecommendModal}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition"
+                            >
+                              💡 Recomendar / Sugerir Producto
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
-                  {/* Dynamic Autocomplete Dropdown */}
-                  {isAutocompleteOpen && productSearchQuery.trim().length > 0 && (
-                    <div className="absolute left-0 right-0 bg-white border border-slate-200 mt-1 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto divide-y divide-slate-100">
-
-                      {filteredProducts.map(p => (
-                        <div
-                          key={p._id}
-                          onClick={() => handleAddProductToList(p)}
-                          className="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer text-xs"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            {p.image_url && (
-                              <img src={p.image_url} alt={p.title} className="w-8 h-8 rounded object-cover flex-shrink-0 bg-slate-100" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-bold text-slate-900 truncate">{p.title}</p>
-                              <span className="text-[9px] font-mono text-slate-500">Cód: {p.barcode_qr}</span>
+                  {/* Loaded products in list checklist */}
+                  <div className="space-y-2">
+                    <span className="block text-xs font-bold text-slate-700">Productos en la lista ({activeList.items.length}):</span>
+                    {activeList.items.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400 text-xs">
+                        <ShoppingCart size={32} className="mx-auto text-slate-300 mb-1" />
+                        Tu lista está vacía. ¡Busca y agrega arriba para empezar!
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                        {activeList.items.map(item => (
+                          <div key={item._id} className="p-3 bg-white flex items-center justify-between gap-3 hover:bg-slate-50 transition">
+                            <div
+                              onClick={() => handleOpenProductDetail(item)}
+                              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                              title="Ver histórico de precios"
+                            >
+                              {item.image_url && (
+                                <img src={item.image_url} alt={item.title} className="w-10 h-10 rounded object-cover bg-slate-100" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-extrabold text-sm text-slate-900 truncate flex items-center gap-1 hover:text-emerald-600">
+                                  {item.title} <Eye size={12} className="text-slate-400" />
+                                </p>
+                                <span className="text-[10px] text-slate-500 font-mono">Código: {item.barcode_qr}</span>
+                              </div>
                             </div>
+                            <button
+                              onClick={() => handleRemoveProductFromList(item._id)}
+                              className="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-slate-100 transition"
+                              title="Eliminar"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
-                          <button className="p-1 bg-emerald-50 text-emerald-600 rounded">
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                      {filteredProducts.length === 0 && (
-                        <div className="p-4 text-center space-y-3">
-                          <p className="text-xs text-slate-500 font-semibold">No se encontraron productos registrados.</p>
-                          <button
-                            type="button"
-                            onClick={handleOpenRecommendModal}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition"
-                          >
-                            💡 Recomendar / Sugerir Producto
-                          </button>
-                        </div>
-                      )}
+                  {/* Optimization controls */}
+                  {activeList.items.length > 0 && (
+                    <div className="border-t border-slate-100 pt-4 space-y-3">
+                      <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                        <span>Cantidad máxima de tiendas:</span>
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full text-xs">
+                          {maxStores} {maxStores === 1 ? 'tienda' : 'tiendas'}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="3"
+                        className="w-full accent-emerald-600 cursor-pointer"
+                        value={maxStores}
+                        onChange={(e) => setMaxStores(Number(e.target.value))}
+                      />
+                      <button
+                        onClick={handleOptimizeCart}
+                        disabled={optimizing}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold shadow transition flex items-center justify-center gap-2 text-sm"
+                      >
+                        <Sparkles size={16} />
+                        {optimizing ? 'Optimizando compras...' : 'Optimizar dónde comprar'}
+                      </button>
                     </div>
                   )}
                 </div>
 
-                {/* Loaded products in list checklist */}
-                <div className="space-y-2">
-                  <span className="block text-xs font-bold text-slate-700">Productos en la lista ({activeList.items.length}):</span>
-                  {activeList.items.length === 0 ? (
-                    <div className="text-center py-8 text-slate-400 text-xs">
-                      <ShoppingCart size={32} className="mx-auto text-slate-300 mb-1" />
-                      Tu lista está vacía. ¡Busca y agrega arriba para empezar!
+                {/* OPTIMIZER SPLIT CART PLAN */}
+                {optimizationResult && (
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-6">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900">✨ Plan de Compra Sugerido</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Maximiza ahorro visitando un máximo de {maxStores} tiendas.</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-slate-400 font-bold block">Total Estimado</span>
+                        <span className="text-xl font-black text-emerald-600">${optimizationResult.grand_total}</span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
-                      {activeList.items.map(item => (
-                        <div key={item._id} className="p-3 bg-white flex items-center justify-between gap-3 hover:bg-slate-50 transition">
-                          <div
-                            onClick={() => handleOpenProductDetail(item)}
-                            className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
-                            title="Ver histórico de precios"
-                          >
-                            {item.image_url && (
-                              <img src={item.image_url} alt={item.title} className="w-10 h-10 rounded object-cover bg-slate-100" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-extrabold text-sm text-slate-900 truncate flex items-center gap-1 hover:text-emerald-600">
-                                {item.title} <Eye size={12} className="text-slate-400" />
-                              </p>
-                              <span className="text-[10px] text-slate-500 font-mono">Código: {item.barcode_qr}</span>
+
+                    <div className="space-y-4">
+                      {optimizationResult.stores_to_visit.map((visit, index) => {
+                        const store = visit.store;
+                        return (
+                          <div key={store._id} className="border border-slate-100 rounded-xl overflow-hidden shadow-sm bg-white">
+
+                            {/* Store Header bar */}
+                            <div className="bg-slate-50 p-3 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                              <div>
+                                <span className="bg-indigo-600 text-white font-bold px-1.5 py-0.5 rounded text-[9px] uppercase mr-1.5 inline-block">
+                                  Parada {index + 1}
+                                </span>
+                                <strong className="text-slate-900 text-sm">{store.brand}</strong> - <span className="text-xs text-slate-600">{store.name}</span>
+                                <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-0.5">
+                                  <MapPin size={10} className="text-slate-400" /> {store.address}
+                                </p>
+                              </div>
+                              <div className="flex justify-between sm:text-right border-t sm:border-0 pt-2 sm:pt-0">
+                                <span className="text-xs text-slate-500 block font-bold sm:hidden">Subtotal</span>
+                                <span className="text-sm font-black text-emerald-600">${visit.subtotal}</span>
+                              </div>
+                            </div>
+
+                            {/* Checklist */}
+                            <div className="divide-y divide-slate-100 px-3">
+                              {visit.products.map(p => {
+                                const isChecked = checkedOffProducts[`${store._id}_${p.product_id}`];
+                                return (
+                                  <div
+                                    key={p.product_id}
+                                    onClick={() => handleToggleProductChecked(store._id, p.product_id)}
+                                    className="py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50"
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className={`w-4.5 h-4.5 rounded border flex items-center justify-center transition-all ${
+                                        isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+                                      }`}>
+                                        {isChecked && <Check size={12} strokeWidth={3} />}
+                                      </div>
+                                      <span className={`text-xs font-semibold text-slate-900 truncate ${isChecked ? 'line-through text-slate-400 opacity-55' : ''}`}>
+                                        {p.title}
+                                      </span>
+                                    </div>
+                                    <span className={`text-xs font-black text-slate-800 ${isChecked ? 'line-through text-slate-400 opacity-55' : ''}`}>
+                                      ${p.price}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Maps Link */}
+                            <div className="bg-slate-50/50 p-2 text-right border-t border-slate-100">
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${store.location.coordinates[1]},${store.location.coordinates[0]}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 bg-emerald-600 text-white font-bold text-[10px] px-3 py-1 rounded-md shadow-sm transition hover:bg-emerald-700"
+                              >
+                                <MapPin size={10} /> Ir a Góndola
+                              </a>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleRemoveProductFromList(item._id)}
-                            className="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-slate-100 transition"
-                            title="Eliminar"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        );
+                      })}
 
-                {/* Optimization controls */}
-                {activeList.items.length > 0 && (
-                  <div className="border-t border-slate-100 pt-4 space-y-3">
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-700">
-                      <span>Cantidad máxima de tiendas:</span>
-                      <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full text-xs">
-                        {maxStores} {maxStores === 1 ? 'tienda' : 'tiendas'}
-                      </span>
+                      {/* Route Leaflet Map */}
+                      <div className="space-y-2">
+                        <span className="block text-xs font-bold text-slate-700">Ruta de Supermercados:</span>
+                        <div className="h-60 rounded-xl border border-slate-200 overflow-hidden relative shadow-sm">
+                          <MapContainer center={[-34.6037, -58.3816]} zoom={13} className="w-full h-full">
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            {optimizationResult.stores_to_visit.map((visit, index) => (
+                              <Marker
+                                key={visit.store._id}
+                                position={[visit.store.location.coordinates[1], visit.store.location.coordinates[0]]}
+                              >
+                                <Popup>
+                                  <div className="text-[11px]">
+                                    <strong className="text-indigo-600 font-bold">{visit.store.brand}</strong><br/>
+                                    Parada {index + 1} ({visit.products.length} productos)
+                                  </div>
+                                </Popup>
+                              </Marker>
+                            ))}
+                          </MapContainer>
+                        </div>
+                      </div>
                     </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="3"
-                      className="w-full accent-emerald-600 cursor-pointer"
-                      value={maxStores}
-                      onChange={(e) => setMaxStores(Number(e.target.value))}
-                    />
-                    <button
-                      onClick={handleOptimizeCart}
-                      disabled={optimizing}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold shadow transition flex items-center justify-center gap-2 text-sm"
-                    >
-                      <Sparkles size={16} />
-                      {optimizing ? 'Optimizando compras...' : 'Optimizar dónde comprar'}
-                    </button>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-400 text-sm">
-                No tienes ninguna lista activa. Crea una para empezar.
-              </div>
-            )}
-
-            {/* LISTS HISTORICAL LOG / LISTS DIRECTORY AT BOTTOM */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-3">
-              <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-1.5">
-                📁 Historial de Listas Creadas
-              </h3>
-
-              {savedLists.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4">No tienes listas anteriores guardadas en tu celular.</p>
-              ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {savedLists.map((list) => {
-                    const isActive = activeList && activeList.id === list.id;
-                    return (
-                      <div
-                        key={list.id}
-                        onClick={() => handleSelectList(list)}
-                        className={`p-3 rounded-xl border transition flex items-center justify-between cursor-pointer ${
-                          isActive
-                            ? 'border-emerald-600 bg-emerald-50/50'
-                            : 'border-slate-100 bg-white hover:bg-slate-50'
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-sm text-slate-900 truncate">{list.name}</h4>
-                          <span className="text-[10px] text-slate-500 block mt-0.5">
-                            {list.items.length} productos • {new Date(list.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isActive && <span className="bg-emerald-600 text-white font-extrabold text-[9px] px-2 py-0.5 rounded uppercase">Activa</span>}
-                          <button
-                            onClick={(e) => handleDeleteList(list.id, e)}
-                            className="text-slate-400 hover:text-red-500 p-1 hover:bg-slate-200 rounded transition"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                          <ChevronRight size={16} className="text-slate-400" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* OPTIMIZER SPLIT CART PLAN */}
-            {optimizationResult && (
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-6">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900">✨ Plan de Compra Sugerido</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Maximiza ahorro visitando un máximo de {maxStores} tiendas.</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 font-bold block">Total Estimado</span>
-                    <span className="text-xl font-black text-emerald-600">${optimizationResult.grand_total}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {optimizationResult.stores_to_visit.map((visit, index) => {
-                    const store = visit.store;
-                    return (
-                      <div key={store._id} className="border border-slate-100 rounded-xl overflow-hidden shadow-sm bg-white">
-
-                        {/* Store Header bar */}
-                        <div className="bg-slate-50 p-3 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                          <div>
-                            <span className="bg-indigo-600 text-white font-bold px-1.5 py-0.5 rounded text-[9px] uppercase mr-1.5 inline-block">
-                              Parada {index + 1}
-                            </span>
-                            <strong className="text-slate-900 text-sm">{store.brand}</strong> - <span className="text-xs text-slate-600">{store.name}</span>
-                            <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-0.5">
-                              <MapPin size={10} className="text-slate-400" /> {store.address}
-                            </p>
-                          </div>
-                          <div className="flex justify-between sm:text-right border-t sm:border-0 pt-2 sm:pt-0">
-                            <span className="text-xs text-slate-500 block font-bold sm:hidden">Subtotal</span>
-                            <span className="text-sm font-black text-emerald-600">${visit.subtotal}</span>
-                          </div>
-                        </div>
-
-                        {/* Checklist */}
-                        <div className="divide-y divide-slate-100 px-3">
-                          {visit.products.map(p => {
-                            const isChecked = checkedOffProducts[`${store._id}_${p.product_id}`];
-                            return (
-                              <div
-                                key={p.product_id}
-                                onClick={() => handleToggleProductChecked(store._id, p.product_id)}
-                                className="py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50"
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className={`w-4.5 h-4.5 rounded border flex items-center justify-center transition-all ${
-                                    isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
-                                  }`}>
-                                    {isChecked && <Check size={12} strokeWidth={3} />}
-                                  </div>
-                                  <span className={`text-xs font-semibold text-slate-900 truncate ${isChecked ? 'line-through text-slate-400 opacity-55' : ''}`}>
-                                    {p.title}
-                                  </span>
-                                </div>
-                                <span className={`text-xs font-black text-slate-800 ${isChecked ? 'line-through text-slate-400 opacity-55' : ''}`}>
-                                  ${p.price}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Maps Link */}
-                        <div className="bg-slate-50/50 p-2 text-right border-t border-slate-100">
-                          <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${store.location.coordinates[1]},${store.location.coordinates[0]}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 bg-emerald-600 text-white font-bold text-[10px] px-3 py-1 rounded-md shadow-sm transition hover:bg-emerald-700"
-                          >
-                            <MapPin size={10} /> Ir a Góndola
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Route Leaflet Map */}
-                  <div className="space-y-2">
-                    <span className="block text-xs font-bold text-slate-700">Ruta de Supermercados:</span>
-                    <div className="h-60 rounded-xl border border-slate-200 overflow-hidden relative shadow-sm">
-                      <MapContainer center={[-34.6037, -58.3816]} zoom={13} className="w-full h-full">
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        {optimizationResult.stores_to_visit.map((visit, index) => (
-                          <Marker
-                            key={visit.store._id}
-                            position={[visit.store.location.coordinates[1], visit.store.location.coordinates[0]]}
-                          >
-                            <Popup>
-                              <div className="text-[11px]">
-                                <strong className="text-indigo-600 font-bold">{visit.store.brand}</strong><br/>
-                                Parada {index + 1} ({visit.products.length} productos)
-                              </div>
-                            </Popup>
-                          </Marker>
-                        ))}
-                      </MapContainer>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
           </div>
