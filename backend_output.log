@@ -1,5 +1,9 @@
+
+> supermarket-optimizer-backend@1.0.0 dev
+> node src/index.js
+
 No MONGO_URI provided. Starting in-memory MongoDB server...
-In-memory MongoDB server started at: mongodb://127.0.0.1:42967/
+In-memory MongoDB server started at: mongodb://127.0.0.1:35793/
 MongoDB connected successfully!
 Seeding initial database...
 Default users created:

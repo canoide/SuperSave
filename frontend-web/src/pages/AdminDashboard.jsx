@@ -12,6 +12,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 // Component to handle map clicks and capture coordinates
 function MapClickEvents({ onMapClick }) {
   useMapEvents({
@@ -81,7 +83,7 @@ export default function AdminDashboard() {
   // FETCH HELPER FUNCTIONS
   const fetchPendingProducts = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/admin/pending-products', {
+      const res = await fetch(`${API_URL}/api/admin/pending-products`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -95,7 +97,7 @@ export default function AdminDashboard() {
 
   const fetchPendingPrices = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/admin/pending-prices', {
+      const res = await fetch(`${API_URL}/api/admin/pending-prices`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -109,7 +111,7 @@ export default function AdminDashboard() {
 
   const fetchStores = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/admin/stores', {
+      const res = await fetch(`${API_URL}/api/admin/stores`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -124,7 +126,7 @@ export default function AdminDashboard() {
   // ACTION HANDLERS
   const handleApproveProduct = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/admin/products/${id}/approve`, {
+      const res = await fetch(`${API_URL}/api/admin/products/${id}/approve`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -142,7 +144,7 @@ export default function AdminDashboard() {
 
   const handleRejectProduct = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/admin/products/${id}/reject`, {
+      const res = await fetch(`${API_URL}/api/admin/products/${id}/reject`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -160,7 +162,7 @@ export default function AdminDashboard() {
 
   const handleApprovePrice = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/admin/prices/${id}/approve`, {
+      const res = await fetch(`${API_URL}/api/admin/prices/${id}/approve`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -178,7 +180,7 @@ export default function AdminDashboard() {
 
   const handleRejectPrice = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/admin/prices/${id}/reject`, {
+      const res = await fetch(`${API_URL}/api/admin/prices/${id}/reject`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -197,7 +199,7 @@ export default function AdminDashboard() {
   const handleCreateStore = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/admin/stores', {
+      const res = await fetch(`${API_URL}/api/admin/stores`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +231,7 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/admin/stores/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/stores/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -17,6 +17,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 export default function UserDashboard() {
   const navigate = useNavigate();
   const [token, setToken] = useState('');
@@ -84,7 +86,7 @@ export default function UserDashboard() {
   // FETCH UTILITIES
   const fetchStores = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/products/stores');
+      const res = await fetch(`${API_URL}/api/products/stores`);
       if (res.ok) {
         const data = await res.json();
         setStores(data);
@@ -99,7 +101,7 @@ export default function UserDashboard() {
 
   const fetchApprovedProducts = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/products/list');
+      const res = await fetch(`${API_URL}/api/products/list`);
       if (res.ok) {
         const data = await res.json();
         setAllProducts(data);
@@ -124,7 +126,7 @@ export default function UserDashboard() {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/products/${actualCode}`);
+      const res = await fetch(`${API_URL}/api/products/${actualCode}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -151,7 +153,7 @@ export default function UserDashboard() {
 
     // 2. Fetch history for Recharts
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/products/history/${productId}/${storeId}`);
+      const res = await fetch(`${API_URL}/api/products/history/${productId}/${storeId}`);
       if (res.ok) {
         const data = await res.json();
         // format data for recharts (e.g. transform ISO dates to readable string)
@@ -185,7 +187,7 @@ export default function UserDashboard() {
     }
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/prices/suggest', {
+      const res = await fetch(`${API_URL}/api/prices/suggest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +216,7 @@ export default function UserDashboard() {
   const handleSuggestProduct = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/products', {
+      const res = await fetch(`${API_URL}/api/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -278,7 +280,7 @@ export default function UserDashboard() {
     setCheckedOffProducts({});
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/cart/optimize', {
+      const res = await fetch(`${API_URL}/api/cart/optimize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

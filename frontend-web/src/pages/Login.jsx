@@ -14,9 +14,11 @@ export default function Login() {
     setError('');
     setLoading(true);
 
+    const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
     try {
-      console.log('Sending fetch to http://127.0.0.1:5000/api/auth/login...');
-      const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+      console.log(`Sending fetch to ${API_URL}/api/auth/login...`);
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
