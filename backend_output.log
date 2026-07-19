@@ -3,7 +3,7 @@
 > node src/index.js
 
 No MONGO_URI provided. Starting in-memory MongoDB server...
-In-memory MongoDB server started at: mongodb://127.0.0.1:42581/
+In-memory MongoDB server started at: mongodb://127.0.0.1:38947/
 MongoDB connected successfully!
 Seeding initial database...
 Default users created:

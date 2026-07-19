@@ -8,6 +8,7 @@ import User from './models/User.js';
 // Route imports
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
+import priceRoutes from './routes/prices.js';
 import cartRoutes from './routes/cart.js';
 import adminRoutes from './routes/admin.js';
 
@@ -43,6 +44,7 @@ app.use(async (req, res, next) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/prices', priceRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/admin', adminRoutes);
 
