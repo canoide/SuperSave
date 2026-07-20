@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Trash2, Check, X, MapPin } from 'lucide-react';
+import { LogOut, Plus, Trash2, Check, X, MapPin, Sparkles, ClipboardList, RefreshCw, Eye } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -36,8 +36,27 @@ export default function AdminDashboard() {
   const [pendingProducts, setPendingProducts] = useState([]);
   const [pendingPrices, setPendingPrices] = useState([]);
 
-  // ABM Stores State
+  // All approved products and stores (for select dropdowns)
+  const [allProducts, setAllProducts] = useState([]);
   const [stores, setStores] = useState([]);
+
+  // Modals for admin creation proposals
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productForm, setProductForm] = useState({
+    title: '',
+    description: '',
+    barcode_qr: '',
+    image_url: '',
+  });
+
+  const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
+  const [priceForm, setPriceForm] = useState({
+    product_id: '',
+    store_id: '',
+    proposed_price: '',
+  });
+
+  // ABM Stores State
   const [storeForm, setStoreForm] = useState({
     name: '',
     brand: '',
@@ -72,6 +91,7 @@ export default function AdminDashboard() {
       fetchPendingProducts();
       fetchPendingPrices();
       fetchStores();
+      fetchApprovedProducts();
     }
   }, [token]);
 
@@ -117,9 +137,27 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         setStores(data);
+        if (data.length > 0) {
+          setPriceForm(prev => ({ ...prev, store_id: data[0]._id }));
+        }
       }
     } catch (err) {
       console.error('Error fetching stores:', err);
+    }
+  };
+
+  const fetchApprovedProducts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/products/list`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllProducts(data);
+        if (data.length > 0) {
+          setPriceForm(prev => ({ ...prev, product_id: data[0]._id }));
+        }
+      }
+    } catch (err) {
+      console.error('Error listing approved products:', err);
     }
   };
 
@@ -134,6 +172,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         showMessage('Producto aprobado correctamente.');
         fetchPendingProducts();
+        fetchApprovedProducts();
       } else {
         showMessage(data.error || 'Error al aprobar', 'error');
       }
@@ -247,6 +286,56 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSuggestProductByAdmin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/api/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(productForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMessage('Propuesta de producto creada. Aparece abajo en pendientes para que la apruebes.');
+        setIsProductModalOpen(false);
+        setProductForm({ title: '', description: '', barcode_qr: '', image_url: '' });
+        fetchPendingProducts();
+      } else {
+        showMessage(data.error || 'Error al proponer producto', 'error');
+      }
+    } catch (err) {
+      showMessage('Error al conectar con el servidor', 'error');
+    }
+  };
+
+  const handleSuggestPriceByAdmin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/api/prices/suggest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(priceForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMessage('Propuesta de precio creada. Aparece abajo en pendientes para que la apruebes.');
+        setIsPriceModalOpen(false);
+        setPriceForm(prev => ({ ...prev, proposed_price: '' }));
+        fetchPendingPrices();
+      } else {
+        showMessage(data.error || 'Error al proponer precio', 'error');
+      }
+    } catch (err) {
+      showMessage('Error al conectar con el servidor', 'error');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -269,13 +358,27 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold tracking-tight">Panel de Control de Administrador</h1>
           <p className="text-xs text-indigo-200">Conectado como: {currentUser?.email}</p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 bg-indigo-800 hover:bg-indigo-900 transition text-white px-4 py-2 rounded-lg text-sm font-medium"
-        >
-          <LogOut size={16} />
-          Cerrar Sesión
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsProductModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 transition px-3 py-1.5 rounded-lg text-xs font-bold shadow flex items-center gap-1"
+          >
+            <Plus size={14} /> Sugerir Producto
+          </button>
+          <button
+            onClick={() => setIsPriceModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 transition px-3 py-1.5 rounded-lg text-xs font-bold shadow flex items-center gap-1"
+          >
+            <Sparkles size={14} /> Sugerir Precio
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-indigo-800 hover:bg-indigo-900 transition text-white px-4 py-2 rounded-lg text-sm font-medium"
+          >
+            <LogOut size={16} />
+            Cerrar Sesión
+          </button>
+        </div>
       </nav>
 
       {/* Main Content Area */}
@@ -296,9 +399,25 @@ export default function AdminDashboard() {
 
           {/* COLUMN 1: MODERATION FEED (TABBED) */}
           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col h-[650px]">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              🛡️ Moderación de la Comunidad
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                🛡️ Moderación de la Comunidad
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsProductModalOpen(true)}
+                  className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold"
+                >
+                  + Producto
+                </button>
+                <button
+                  onClick={() => setIsPriceModalOpen(true)}
+                  className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold"
+                >
+                  + Precio
+                </button>
+              </div>
+            </div>
 
             {/* Tab controls */}
             <div className="flex border-b border-gray-200 mb-4">
@@ -331,10 +450,10 @@ export default function AdminDashboard() {
               {activeTab === 'products' && (
                 <>
                   {pendingProducts.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12">
-                      <Check size={48} className="text-emerald-500 mb-2" />
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12 text-center">
+                      <Check size={48} className="text-emerald-500 mb-2 mx-auto" />
                       <p className="font-medium">No hay productos pendientes</p>
-                      <p className="text-xs">¡Buen trabajo! Todo está al día.</p>
+                      <p className="text-xs mt-1">Surgiere nuevos productos usando el botón superior.</p>
                     </div>
                   ) : (
                     pendingProducts.map((p) => (
@@ -381,10 +500,10 @@ export default function AdminDashboard() {
               {activeTab === 'prices' && (
                 <>
                   {pendingPrices.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12">
-                      <Check size={48} className="text-emerald-500 mb-2" />
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12 text-center">
+                      <Check size={48} className="text-emerald-500 mb-2 mx-auto" />
                       <p className="font-medium">No hay sugerencias de precios pendientes</p>
-                      <p className="text-xs">¡Buen trabajo! Todo está al día.</p>
+                      <p className="text-xs mt-1">Usa "Sugerir Precio" arriba para proponer un precio nuevo.</p>
                     </div>
                   ) : (
                     pendingPrices.map((req) => (
@@ -585,6 +704,155 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* MODAL 1: ADD / SUGGEST NEW PRODUCT (ADMIN) */}
+      {isProductModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center">
+          <div className="max-w-md w-full bg-white rounded-2xl p-6 shadow-2xl space-y-4 relative text-xs">
+            <button
+              onClick={() => setIsProductModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X size={18} />
+            </button>
+            <h3 className="font-extrabold text-indigo-700 text-base flex items-center gap-1.5">
+              💡 Proponer / Agregar Nuevo Producto al Catálogo
+            </h3>
+            <p className="text-gray-500">Crea una sugerencia de producto que quedará pendiente para tu aprobación instantánea.</p>
+
+            <form onSubmit={handleSuggestProductByAdmin} className="space-y-3">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Nombre del Producto</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Galletitas de Vainilla 110g"
+                  className="w-full border border-gray-300 p-2.5 rounded-lg text-sm text-gray-900"
+                  value={productForm.title}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Descripción / Notas</label>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="Ej. Galletitas dulces crujientes con chips de chocolate"
+                  className="w-full border border-gray-300 p-2.5 rounded-lg text-sm text-gray-900"
+                  value={productForm.description}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Código de Barras / QR</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="77900..."
+                  className="w-full border border-gray-300 p-2.5 rounded-lg text-sm text-gray-900 font-mono"
+                  value={productForm.barcode_qr}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, barcode_qr: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">URL de Imagen (opcional)</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  className="w-full border border-gray-300 p-2.5 rounded-lg text-sm text-gray-900"
+                  value={productForm.image_url}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, image_url: e.target.value }))}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold shadow transition text-sm"
+              >
+                Registrar Propuesta de Producto
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: SUGGEST / UPDATE PRICE (ADMIN) */}
+      {isPriceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center">
+          <div className="max-w-md w-full bg-white rounded-2xl p-6 shadow-2xl space-y-4 relative text-xs">
+            <button
+              onClick={() => setIsPriceModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X size={18} />
+            </button>
+            <h3 className="font-extrabold text-emerald-700 text-base flex items-center gap-1.5">
+              💰 Proponer / Actualizar Precio de Producto
+            </h3>
+            <p className="text-gray-500">Crea una sugerencia de precio que quedará pendiente para tu aprobación instantánea.</p>
+
+            <form onSubmit={handleSuggestPriceByAdmin} className="space-y-4">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Seleccionar Producto</label>
+                {allProducts.length === 0 ? (
+                  <p className="text-xs text-red-500">No hay productos aprobados cargados en el sistema.</p>
+                ) : (
+                  <select
+                    required
+                    className="w-full border border-gray-300 p-2 rounded-lg text-sm text-gray-900"
+                    value={priceForm.product_id}
+                    onChange={(e) => setPriceForm(prev => ({ ...prev, product_id: e.target.value }))}
+                  >
+                    {allProducts.map(p => (
+                      <option key={p._id} value={p._id}>{p.title} (Cód: {p.barcode_qr})</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Seleccionar Supermercado</label>
+                {stores.length === 0 ? (
+                  <p className="text-xs text-red-500">No hay sucursales cargadas en el sistema.</p>
+                ) : (
+                  <select
+                    required
+                    className="w-full border border-gray-300 p-2 rounded-lg text-sm text-gray-900"
+                    value={priceForm.store_id}
+                    onChange={(e) => setPriceForm(prev => ({ ...prev, store_id: e.target.value }))}
+                  >
+                    {stores.map(s => (
+                      <option key={s._id} value={s._id}>{s.brand} - {s.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Monto Nuevo del Precio ($)</label>
+                <div className="relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-400 text-sm">$</span>
+                  </div>
+                  <input
+                    type="number"
+                    step="any"
+                    required
+                    placeholder="Monto"
+                    className="w-full border border-gray-300 pl-7 pr-3 py-2.5 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    value={priceForm.proposed_price}
+                    onChange={(e) => setPriceForm(prev => ({ ...prev, proposed_price: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold shadow transition text-sm"
+              >
+                Registrar Propuesta de Precio
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

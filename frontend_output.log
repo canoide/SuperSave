@@ -3,7 +3,7 @@
 > vite --port 3000 --host
 
 
-  VITE v5.4.21  ready in 896 ms
+  VITE v5.4.21  ready in 823 ms
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://192.168.0.2:3000/
